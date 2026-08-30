@@ -1,0 +1,77 @@
+# =============================================================================
+# Segredos e ambiente
+# =============================================================================
+.env
+.env.local
+.env.*
+!.env.example
+*.pem
+*.p12
+*.key
+htpasswd
+.htpasswd
+
+# =============================================================================
+# Logs da aplicação (não versionar)
+# =============================================================================
+*.log
+*_log.txt
+*_errors.log
+process_payment_log.txt
+process_free_log.txt
+webhook_log.txt
+api_errors.log
+admin_api_errors.log
+notification_api_errors.log
+logs_backup/
+
+# =============================================================================
+# Uploads de usuários / mídia / certificados
+# (a pasta existe; o conteúdo não deve ir para um GitHub novo)
+# =============================================================================
+uploads/**
+!uploads/.gitkeep
+
+# =============================================================================
+# Dumps e backups de banco com dados reais
+# =============================================================================
+*.sql.gz
+*.sql.zip
+*.dump
+dumps/
+backups/
+# Dump acidental em aula_files (já coberto por uploads/**)
+
+# Instaladores oficiais (NÃO ignorar):
+#   database/install.sql
+#   Base_de_Dados_Instalacao.sql  (legado; sanitizado)
+
+# =============================================================================
+# Dependências PHP (instalar com: composer install)
+# PHPMailer/ na raiz é vendored e DEVE ser versionado.
+# =============================================================================
+/vendor/
+
+# =============================================================================
+# Cache, temporários, IDE, SO
+# =============================================================================
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.phpunit.result.cache
+node_modules/
+tmp/
+temp/
+cache/
+*.tmp
+*.cache
+
+# =============================================================================
+# Docker local (não commitar overrides com senhas)
+# =============================================================================
+docker-compose.override.yml

@@ -1,0 +1,12 @@
+{
+    "name": "sinergiacore/platform",
+    "description": "Plataforma SinergiaCore",
+    "require": {
+        "php": ">=7.4",
+        "minishlink/web-push": "^7.0",
+        "stripe/stripe-php": "^19.4"
+    },
+    "config": {
+        "optimize-autoloader": true
+    }
+}
