@@ -75,3 +75,13 @@ cache/
 # Docker local (não commitar overrides com senhas)
 # =============================================================================
 docker-compose.override.yml
+
+# Pastas estruturais obrigatorias de uploads
+!uploads/config/
+!uploads/config/.gitkeep
+!uploads/aula_covers/
+!uploads/aula_covers/.gitkeep
+!uploads/aula_files/
+!uploads/aula_files/.gitkeep
+!uploads/legal/
+!uploads/legal/.gitkeep
