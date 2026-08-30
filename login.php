@@ -310,11 +310,11 @@ $forgot_password_api_url = (in_array($fp_script_dir, ['/', '.', ''], true) ? '' 
 
             <div class="relative z-20 mb-8 max-w-lg">
                 <h1 class="text-5xl font-bold text-white mb-4 leading-tight">
-                    Escale suas vendas <br>
-                    <span class="text-transparent bg-clip-text" style="background-image: linear-gradient(to right, var(--accent-primary), rgba(50, 231, 104, 0.6));">sem limites.</span>
+                    Transforme ideias em vendas. <br>
+                    <span class="text-transparent bg-clip-text" style="background-image: linear-gradient(to right, var(--accent-primary), rgba(50, 231, 104, 0.6));">Venda mais. Cresça todos os dias.</span>
                 </h1>
                 <p class="text-gray-300 text-lg leading-relaxed">
-                    Junte-se a milhares de empreendedores que faturam todos os dias com nossa tecnologia de alta performance.
+                    Produtos digitais, ferramentas e soluções para quem quer transformar conhecimento em resultado.
                 </p>
             </div>
         </div>
@@ -563,12 +563,14 @@ $forgot_password_api_url = (in_array($fp_script_dir, ['/', '.', ''], true) ? '' 
         });
 
         const wrapper = document.getElementById('notifications-wrapper');
-        const names = ['Gabriel S.', 'Amanda M.', 'Lucas R.', 'Beatriz C.', 'João P.', 'Fernanda L.'];
+        const names = ['Fernanda L.', 'Gabriel S.', 'Beatriz C.', 'Lucas R.', 'Mariana P.', 'Carlos M.', 'Juliana A.', 'Rafael T.'];
         const notificationImageUrl = '<?php echo htmlspecialchars($notification_image_url); ?>';
+        const ticketValues = [19.90, 27.90, 29.90, 37.90, 47.90, 59.90, 67.90];
         const actions = [
-            { type: 'Venda Aprovada', icon: 'check-circle', color: 'text-green-500', valueRange: [47, 297] },
-            { type: 'PIX Gerado', icon: 'qr-code', color: 'text-blue-500', valueRange: [97, 197] },
-            { type: 'Venda Cartão', icon: 'credit-card', color: 'text-orange-500', valueRange: [147, 497] }
+            { type: 'Venda Aprovada', icon: 'check-circle', color: 'text-green-500' },
+            { type: 'Venda Cartão', icon: 'credit-card', color: 'text-orange-500' },
+            { type: 'PIX Gerado', icon: 'qr-code', color: 'text-blue-500' },
+            { type: 'PIX Aprovado', icon: 'check-circle', color: 'text-green-500' }
         ];
 
         function formatCurrency(value) {
@@ -582,7 +584,7 @@ $forgot_password_api_url = (in_array($fp_script_dir, ['/', '.', ''], true) ? '' 
 
             const randomName = names[Math.floor(Math.random() * names.length)];
             const randomAction = actions[Math.floor(Math.random() * actions.length)];
-            const randomValue = Math.floor(Math.random() * (randomAction.valueRange[1] - randomAction.valueRange[0]) + randomAction.valueRange[0]) + 0.90;
+            const randomValue = ticketValues[Math.floor(Math.random() * ticketValues.length)];
 
             // Obtém a cor primária para o gradiente
             const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--accent-primary').trim();
