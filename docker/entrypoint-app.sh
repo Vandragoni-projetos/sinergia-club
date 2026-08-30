@@ -10,7 +10,10 @@ fi
 
 # Volume persistente em /var/www/html/uploads (EasyPanel/Compose) pode nascer
 # vazio e owned by root. Sem isso, move_uploaded_file falha em uploads/config.
-mkdir -p /var/www/html/uploads/config
+mkdir -p /var/www/html/uploads/config \
+  /var/www/html/uploads/aula_covers \
+  /var/www/html/uploads/aula_files \
+  /var/www/html/uploads/legal
 chown -R www-data:www-data /var/www/html/uploads 2>/dev/null || true
 chmod -R 775 /var/www/html/uploads 2>/dev/null || true
 

@@ -24,6 +24,9 @@ RUN composer install --no-dev --prefer-dist --no-interaction --optimize-autoload
 
 # Ajustar permissões
 RUN mkdir -p /var/www/html/uploads/config \
+        /var/www/html/uploads/aula_covers \
+        /var/www/html/uploads/aula_files \
+        /var/www/html/uploads/legal \
     && chown -R www-data:www-data /var/www/html \
     && chmod -R 775 /var/www/html/uploads
 

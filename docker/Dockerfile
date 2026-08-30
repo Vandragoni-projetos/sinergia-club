@@ -53,6 +53,9 @@ RUN chmod +x /entrypoint-app.sh
 # Permissões: aplicação e uploads gravável pelo www-data
 # (o volume em runtime pode ocultar esta pasta; o entrypoint recria/ajusta)
 RUN mkdir -p /var/www/html/uploads/config \
+        /var/www/html/uploads/aula_covers \
+        /var/www/html/uploads/aula_files \
+        /var/www/html/uploads/legal \
     && chown -R www-data:www-data /var/www/html \
     && chmod -R 775 /var/www/html/uploads
 
