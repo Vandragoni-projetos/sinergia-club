@@ -1,6 +1,6 @@
 // Service Worker para PWA - Cache e Notificações Push
-const CACHE_NAME = 'pwa-cache-v3';
-const RUNTIME_CACHE = 'pwa-runtime-v3';
+const CACHE_NAME = 'pwa-cache-v4';
+const RUNTIME_CACHE = 'pwa-runtime-v4';
 
 const STATIC_CACHE_URLS = ['/', '/style.css', '/index.php', '/dashboard.php'];
 
@@ -27,7 +27,8 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
     if (event.request.method !== 'GET') return;
     const url = new URL(event.request.url);
-    if (url.origin !== location.origin && !url.href.includes('/api/') && !url.href.includes('/checkout') && !url.href.includes('/obrigado')) return;
+    if (url.pathname.indexOf('/api/') === 0) return;
+    if (url.origin !== location.origin && !url.href.includes('/checkout') && !url.href.includes('/obrigado')) return;
     event.respondWith(
         fetch(event.request)
             .then((response) => {

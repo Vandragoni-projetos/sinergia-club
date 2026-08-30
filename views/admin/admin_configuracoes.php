@@ -497,7 +497,7 @@ document.getElementById('admin-generate-license-btn')?.addEventListener('click',
     btn.innerHTML = '<i data-lucide="loader" class="w-4 h-4 animate-spin"></i> Gerando...';
     if (typeof lucide !== 'undefined') lucide.createIcons();
     try {
-        const r = await fetch('/api/admin_api?action=generate_license', {
+        const r = await fetch('/api/admin_api.php?action=generate_license', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -533,7 +533,7 @@ document.querySelectorAll('.revogar-licenca-btn').forEach(btn => {
         const chave = this.dataset.chave;
         if (!chave || !confirm('Tem certeza que deseja revogar esta licença? Ela deixará de ser válida.')) return;
         try {
-            const r = await fetch('/api/admin_api?action=revoke_license', {
+            const r = await fetch('/api/admin_api.php?action=revoke_license', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ chave: chave, bloquear: false })
@@ -654,6 +654,16 @@ $podeHabilitarMaster = !empty($envMasterSecret);
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     lucide.createIcons();
+
+    const _nativeFetch = window.fetch.bind(window);
+    window.fetch = function(input, init) {
+        init = init || {};
+        if (typeof input === 'string' && input.indexOf('/api/admin_api') === 0) {
+            if (!init.credentials) init.credentials = 'same-origin';
+            if (!init.cache) init.cache = 'no-store';
+        }
+        return _nativeFetch(input, init);
+    };
     
     const statusMessage = document.getElementById('status-message');
     
@@ -701,7 +711,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Carregar configurações atuais
     async function loadSettings() {
         try {
-            const response = await fetch('/api/admin_api?action=get_system_settings');
+            const response = await fetch('/api/admin_api.php?action=get_system_settings');
             const result = await response.json();
             
             if (result.success && result.data) {
@@ -825,7 +835,7 @@ document.addEventListener('DOMContentLoaded', function() {
         uploadLogoBtn.textContent = 'Enviando...';
         
         try {
-            const response = await fetch('/api/admin_api?action=upload_logo', {
+            const response = await fetch('/api/admin_api.php?action=upload_logo', {
                 method: 'POST',
                 body: formData
             });
@@ -879,7 +889,7 @@ document.addEventListener('DOMContentLoaded', function() {
         uploadLoginImageBtn.textContent = 'Enviando...';
         
         try {
-            const response = await fetch('/api/admin_api?action=upload_login_image', {
+            const response = await fetch('/api/admin_api.php?action=upload_login_image', {
                 method: 'POST',
                 body: formData
             });
@@ -921,7 +931,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             try {
                 console.log('Enviando nome_plataforma:', nome);
-                const response = await fetch('/api/admin_api?action=save_system_settings', {
+                const response = await fetch('/api/admin_api.php?action=save_system_settings', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -978,7 +988,7 @@ document.addEventListener('DOMContentLoaded', function() {
             uploadLogoCheckoutBtn.textContent = 'Enviando...';
             
             try {
-                const response = await fetch('/api/admin_api?action=upload_logo_checkout', {
+                const response = await fetch('/api/admin_api.php?action=upload_logo_checkout', {
                     method: 'POST',
                     body: formData
                 });
@@ -1031,7 +1041,7 @@ document.addEventListener('DOMContentLoaded', function() {
         uploadFaviconBtn.textContent = 'Enviando...';
         
         try {
-            const response = await fetch('/api/admin_api?action=upload_favicon', {
+            const response = await fetch('/api/admin_api.php?action=upload_favicon', {
                 method: 'POST',
                 body: formData
             });
@@ -1088,7 +1098,7 @@ document.addEventListener('DOMContentLoaded', function() {
         uploadNotificationImageBtn.textContent = 'Enviando...';
         
         try {
-            const response = await fetch('/api/admin_api?action=upload_notification_image', {
+            const response = await fetch('/api/admin_api.php?action=upload_notification_image', {
                 method: 'POST',
                 body: formData
             });
@@ -1145,7 +1155,7 @@ document.addEventListener('DOMContentLoaded', function() {
         uploadSecuritySealBtn.textContent = 'Enviando...';
         
         try {
-            const response = await fetch('/api/admin_api?action=upload_security_seal', {
+            const response = await fetch('/api/admin_api.php?action=upload_security_seal', {
                 method: 'POST',
                 body: formData
             });
@@ -1180,7 +1190,7 @@ document.addEventListener('DOMContentLoaded', function() {
         deleteSecuritySealBtn.disabled = true;
         
         try {
-            const response = await fetch('/api/admin_api?action=delete_security_seal', {
+            const response = await fetch('/api/admin_api.php?action=delete_security_seal', {
                 method: 'POST'
             });
             const result = await response.json();
@@ -1286,7 +1296,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Carregar informações da licença
     async function loadLicenseInfo() {
         try {
-            const response = await fetch('/api/admin_api?action=get_license_info');
+            const response = await fetch('/api/admin_api.php?action=get_license_info');
             const result = await response.json();
             
             if (result.success && result.data) {
@@ -1382,7 +1392,7 @@ document.addEventListener('DOMContentLoaded', function() {
         activateLicenseBtn.textContent = 'Ativando...';
         
         try {
-            const response = await fetch('/api/admin_api?action=activate_license', {
+            const response = await fetch('/api/admin_api.php?action=activate_license', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ activation_key: key })

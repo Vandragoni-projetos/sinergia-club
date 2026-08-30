@@ -3,10 +3,8 @@
 // como espaços em branco antes da tag <?php ou de arquivos incluídos.
 ob_start();
 
-if (session_status() == PHP_SESSION_NONE) {
-    session_start();
-}
 header('Content-Type: application/json');
+header('Cache-Control: no-store, no-cache, must-revalidate');
 
 // Incluir PHPMailer
 use PHPMailer\PHPMailer\PHPMailer;
@@ -66,11 +64,27 @@ try {
     }
 
     // Verificação de segurança: Apenas admins logados podem acessar esta API
-    if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true || $_SESSION['tipo'] !== 'admin') {
+    $loggedin = !empty($_SESSION['loggedin']) && (
+        $_SESSION['loggedin'] === true
+        || $_SESSION['loggedin'] === 1
+        || $_SESSION['loggedin'] === '1'
+    );
+    $tipo = strtolower(trim((string) ($_SESSION['tipo'] ?? '')));
+    if (!$loggedin || $tipo !== 'admin') {
         http_response_code(403);
-        // Limpa o buffer antes de enviar o JSON
+        error_log(
+            'ADMIN_API 403: method=' . ($_SERVER['REQUEST_METHOD'] ?? '')
+            . ' uri=' . ($_SERVER['REQUEST_URI'] ?? '')
+            . ' cookie=' . (isset($_COOKIE[session_name()]) ? 'yes' : 'no')
+            . ' sid=' . session_id()
+            . ' loggedin=' . var_export($_SESSION['loggedin'] ?? null, true)
+            . ' tipo=' . var_export($_SESSION['tipo'] ?? null, true)
+        );
         ob_clean();
-        echo json_encode(['error' => 'Acesso não autorizado']);
+        echo json_encode([
+            'success' => false,
+            'error' => 'Acesso não autorizado. Atualize a página e faça login novamente como administrador.',
+        ]);
         exit;
     }
 

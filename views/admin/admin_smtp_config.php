@@ -222,7 +222,7 @@ document.addEventListener('DOMContentLoaded', function() {
     async function fetchEmailSettings() {
         showStatusMessage('<i data-lucide="loader" class="animate-spin w-5 h-5 inline-block mr-2"></i> Carregando configurações...', 'info');
         try {
-            const response = await fetch('/api/admin_api?action=get_email_settings');
+            const response = await fetch('/api/admin_api.php?action=get_email_settings', { credentials: 'same-origin', cache: 'no-store' });
             const result = await response.json();
 
             if (response.ok && result.success) {
