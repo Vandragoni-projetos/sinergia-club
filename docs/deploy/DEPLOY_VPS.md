@@ -100,6 +100,8 @@ sudo chown -R www-data:www-data .
 sudo find . -type d -exec chmod 755 {} \;
 sudo find . -type f -exec chmod 644 {} \;
 sudo chmod -R 775 uploads
+sudo mkdir -p uploads/config
+sudo chmod 775 uploads/config
 sudo chmod 640 .env
 ```
 

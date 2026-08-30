@@ -31,6 +31,8 @@ logs_backup/
 # =============================================================================
 uploads/**
 !uploads/.gitkeep
+!uploads/config/
+!uploads/config/.gitkeep
 
 # =============================================================================
 # Dumps e backups de banco com dados reais

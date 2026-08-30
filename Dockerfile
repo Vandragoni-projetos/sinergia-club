@@ -23,7 +23,9 @@ COPY . .
 RUN composer install --no-dev --prefer-dist --no-interaction --optimize-autoloader
 
 # Ajustar permissões
-RUN chown -R www-data:www-data /var/www/html
+RUN mkdir -p /var/www/html/uploads/config \
+    && chown -R www-data:www-data /var/www/html \
+    && chmod -R 775 /var/www/html/uploads
 
 # Expor porta do Apache
 EXPOSE 80

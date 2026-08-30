@@ -60,6 +60,7 @@ if (file_exists($phpmailer_path . 'SMTP.php')) {
 
 try {
     require_once __DIR__ . '/../config/config.php';
+    require_once __DIR__ . '/../helpers/upload_helper.php';
     if ($adminApiDebug) {
         error_log("ADMIN_API: config.php carregado com sucesso.");
     }
@@ -72,6 +73,96 @@ try {
         echo json_encode(['error' => 'Acesso não autorizado']);
         exit;
     }
+
+    /**
+     * Salva imagem de configuração em uploads/config (caminho absoluto) e persiste a URL.
+     * Encerra o request com JSON.
+     *
+     * @param callable|null $afterSave function(string $relativePath): void
+     */
+    $adminSaveConfigImage = function (
+        $filesKey,
+        $prefix,
+        array $allowedTypes,
+        $maxSize,
+        $settingKey,
+        $successMessage,
+        $typeError,
+        $maxSizeLabel,
+        $afterSave = null
+    ) {
+        if (!isset($_FILES[$filesKey]) || $_FILES[$filesKey]['error'] !== UPLOAD_ERR_OK) {
+            ob_clean();
+            echo json_encode(['success' => false, 'error' => 'Erro no upload do arquivo']);
+            exit;
+        }
+
+        $file = $_FILES[$filesKey];
+        $ensured = ensure_uploads_config_dir();
+        if (!$ensured['ok']) {
+            error_log('ADMIN_API ' . $prefix . ': ' . $ensured['error']);
+            ob_clean();
+            echo json_encode(['success' => false, 'error' => $ensured['error']]);
+            exit;
+        }
+
+        if (!in_array($file['type'], $allowedTypes, true)) {
+            ob_clean();
+            echo json_encode(['success' => false, 'error' => $typeError]);
+            exit;
+        }
+
+        if ($file['size'] > $maxSize) {
+            ob_clean();
+            echo json_encode(['success' => false, 'error' => 'Arquivo muito grande. Máximo ' . $maxSizeLabel]);
+            exit;
+        }
+
+        $ext = strtolower((string) pathinfo($file['name'], PATHINFO_EXTENSION));
+        if (!preg_match('/^[a-z0-9]+$/', $ext)) {
+            ob_clean();
+            echo json_encode(['success' => false, 'error' => 'Extensão de arquivo inválida']);
+            exit;
+        }
+
+        $newName = $prefix . time() . '.' . $ext;
+        $relative = 'uploads/config/' . $newName;
+        $absolute = $ensured['dir'] . '/' . $newName;
+
+        $old = getSystemSetting($settingKey, '');
+        delete_local_upload_file($old);
+
+        if (function_exists('error_clear_last')) {
+            error_clear_last();
+        }
+
+        if (!is_uploaded_file($file['tmp_name']) || !move_uploaded_file($file['tmp_name'], $absolute)) {
+            $error = error_get_last();
+            error_log('ADMIN_API ' . $prefix . ': falha ao mover para ' . $absolute . ' — ' . ($error['message'] ?? 'erro desconhecido'));
+            ob_clean();
+            echo json_encode([
+                'success' => false,
+                'error' => 'Erro ao salvar arquivo: ' . ($error['message'] ?? 'diretório indisponível ou sem permissão de escrita'),
+            ]);
+            exit;
+        }
+
+        if (!setSystemSetting($settingKey, $relative)) {
+            error_log('ADMIN_API ' . $prefix . ': erro ao salvar configuração no banco');
+            ob_clean();
+            echo json_encode(['success' => false, 'error' => 'Erro ao salvar configuração no banco de dados']);
+            exit;
+        }
+
+        if (is_callable($afterSave)) {
+            $afterSave($relative);
+        }
+
+        error_log('ADMIN_API ' . $prefix . ': salvo em ' . $absolute);
+        ob_clean();
+        echo json_encode(['success' => true, 'message' => $successMessage, 'url' => '/' . $relative]);
+        exit;
+    };
 
     $action = $_GET['action'] ?? '';
     if ($adminApiDebug) {
@@ -1139,426 +1230,97 @@ try {
         exit;
     }
     elseif ($action === 'upload_logo' && $_SERVER['REQUEST_METHOD'] === 'POST') {
-        require_once __DIR__ . '/../config/config.php';
-        $upload_dir = 'uploads/config/';
-        if (!is_dir($upload_dir)) {
-            mkdir($upload_dir, 0755, true);
-        }
-        
-        if (!isset($_FILES['logo']) || $_FILES['logo']['error'] !== UPLOAD_ERR_OK) {
-            ob_clean();
-            echo json_encode(['success' => false, 'error' => 'Erro no upload do arquivo']);
-            exit;
-        }
-        
-        $file = $_FILES['logo'];
-        $allowed_types = ['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml'];
-        $max_size = 2 * 1024 * 1024; // 2MB
-        
-        if (!in_array($file['type'], $allowed_types)) {
-            ob_clean();
-            echo json_encode(['success' => false, 'error' => 'Tipo de arquivo não permitido. Use JPG, PNG, WEBP ou SVG']);
-            exit;
-        }
-        
-        if ($file['size'] > $max_size) {
-            ob_clean();
-            echo json_encode(['success' => false, 'error' => 'Arquivo muito grande. Máximo 2MB']);
-            exit;
-        }
-        
-        $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
-        $new_name = 'logo_' . time() . '.' . $ext;
-        $target_path = $upload_dir . $new_name;
-        $target_path_absoluto = __DIR__ . '/../' . $target_path;
-        
-        // Debug
-        error_log("ADMIN_API upload_logo: target_path (relativo)=$target_path");
-        error_log("ADMIN_API upload_logo: target_path (absoluto)=$target_path_absoluto");
-        error_log("ADMIN_API upload_logo: upload_dir exists=" . (is_dir($upload_dir) ? 'YES' : 'NO'));
-        error_log("ADMIN_API upload_logo: upload_dir writable=" . (is_writable($upload_dir) ? 'YES' : 'NO'));
-        
-        // Deleta logo antiga se existir
-        $old_logo = getSystemSetting('logo_url', '');
-        if (!empty($old_logo) && strpos($old_logo, 'http') !== 0) {
-            // Remove barra inicial se houver
-            $old_path = ltrim($old_logo, '/');
-            $old_path_absoluto = __DIR__ . '/../' . $old_path;
-            if (file_exists($old_path_absoluto)) {
-                @unlink($old_path_absoluto);
-                error_log("ADMIN_API upload_logo: Antiga logo deletada: $old_path_absoluto");
-            }
-        }
-        
-        // Usa caminho absoluto para move_uploaded_file
-        if (move_uploaded_file($file['tmp_name'], $target_path_absoluto)) {
-            error_log("ADMIN_API upload_logo: Arquivo movido com sucesso para: $target_path_absoluto");
-            // Verifica se arquivo existe após mover
-            if (file_exists($target_path_absoluto)) {
-                error_log("ADMIN_API upload_logo: Arquivo confirmado existente após mover");
-            } else {
-                error_log("ADMIN_API upload_logo: ERRO - Arquivo NÃO existe após mover!");
-            }
-            // Salva no banco SEM barra inicial (igual às imagens dos módulos)
-            // Será acessada como /uploads/config/logo_xxx.jpg quando exibida
-            $logo_url = $target_path; // Sem barra inicial
-            if (setSystemSetting('logo_url', $logo_url)) {
-                // Sincroniza theme_json com logo_url (White-label)
+        $adminSaveConfigImage(
+            'logo',
+            'logo_',
+            ['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml'],
+            2 * 1024 * 1024,
+            'logo_url',
+            'Logo enviada com sucesso',
+            'Tipo de arquivo não permitido. Use JPG, PNG, WEBP ou SVG',
+            '2MB',
+            function ($relative) {
                 if (file_exists(__DIR__ . '/../config/theme_helper.php')) {
                     require_once __DIR__ . '/../config/theme_helper.php';
                     $t = get_theme_json();
-                    $t['logo_url'] = $logo_url;
+                    $t['logo_url'] = $relative;
                     set_theme_json($t);
                 }
-                error_log("ADMIN_API upload_logo: Configuração salva no banco: $logo_url");
-                ob_clean();
-                echo json_encode(['success' => true, 'message' => 'Logo enviada com sucesso', 'url' => '/' . $logo_url]);
-            } else {
-                error_log("ADMIN_API upload_logo: Erro ao salvar configuração no banco");
-                ob_clean();
-                echo json_encode(['success' => false, 'error' => 'Erro ao salvar configuração no banco de dados']);
             }
-        } else {
-            $error = error_get_last();
-            error_log("ADMIN_API upload_logo: Erro ao mover arquivo. Detalhes: " . ($error ? $error['message'] : 'Erro desconhecido'));
-            ob_clean();
-            echo json_encode(['success' => false, 'error' => 'Erro ao salvar arquivo: ' . ($error ? $error['message'] : 'Erro desconhecido')]);
-        }
-        exit;
+        );
     }
     elseif ($action === 'upload_login_image' && $_SERVER['REQUEST_METHOD'] === 'POST') {
-        require_once __DIR__ . '/../config/config.php';
-        $upload_dir = 'uploads/config/';
-        if (!is_dir($upload_dir)) {
-            mkdir($upload_dir, 0755, true);
-        }
-        
-        if (!isset($_FILES['login_image']) || $_FILES['login_image']['error'] !== UPLOAD_ERR_OK) {
-            ob_clean();
-            echo json_encode(['success' => false, 'error' => 'Erro no upload do arquivo']);
-            exit;
-        }
-        
-        $file = $_FILES['login_image'];
-        $allowed_types = ['image/jpeg', 'image/png', 'image/webp'];
-        $max_size = 5 * 1024 * 1024; // 5MB
-        
-        if (!in_array($file['type'], $allowed_types)) {
-            ob_clean();
-            echo json_encode(['success' => false, 'error' => 'Tipo de arquivo não permitido. Use JPG, PNG ou WEBP']);
-            exit;
-        }
-        
-        if ($file['size'] > $max_size) {
-            ob_clean();
-            echo json_encode(['success' => false, 'error' => 'Arquivo muito grande. Máximo 5MB']);
-            exit;
-        }
-        
-        $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
-        $new_name = 'login_bg_' . time() . '.' . $ext;
-        $target_path = $upload_dir . $new_name;
-        $target_path_absoluto = __DIR__ . '/../' . $target_path;
-        
-        // Deleta imagem antiga se existir
-        $old_image = getSystemSetting('login_image_url', '');
-        if (!empty($old_image) && strpos($old_image, 'http') !== 0) {
-            // Remove barra inicial se houver
-            $old_path = ltrim($old_image, '/');
-            $old_path_absoluto = __DIR__ . '/../' . $old_path;
-            if (file_exists($old_path_absoluto)) {
-                @unlink($old_path_absoluto);
-            }
-        }
-        
-        // Usa caminho absoluto para move_uploaded_file
-        if (move_uploaded_file($file['tmp_name'], $target_path_absoluto)) {
-            // Salva no banco SEM barra inicial (igual às imagens dos módulos)
-            $image_url = $target_path; // Sem barra inicial
-            if (setSystemSetting('login_image_url', $image_url)) {
-                // Sincroniza theme_json com login_banner (White-label)
+        $adminSaveConfigImage(
+            'login_image',
+            'login_bg_',
+            ['image/jpeg', 'image/png', 'image/webp'],
+            5 * 1024 * 1024,
+            'login_image_url',
+            'Imagem de login enviada com sucesso',
+            'Tipo de arquivo não permitido. Use JPG, PNG ou WEBP',
+            '5MB',
+            function ($relative) {
                 if (file_exists(__DIR__ . '/../config/theme_helper.php')) {
                     require_once __DIR__ . '/../config/theme_helper.php';
                     $t = get_theme_json();
-                    $t['login_banner_url'] = $image_url;
+                    $t['login_banner_url'] = $relative;
                     set_theme_json($t);
                 }
-                ob_clean();
-                echo json_encode(['success' => true, 'message' => 'Imagem de login enviada com sucesso', 'url' => '/' . $image_url]);
-            } else {
-                ob_clean();
-                echo json_encode(['success' => false, 'error' => 'Erro ao salvar configuração no banco de dados']);
             }
-        } else {
-            $error = error_get_last();
-            error_log("ADMIN_API upload_login_image: Erro ao mover arquivo. Detalhes: " . ($error ? $error['message'] : 'Erro desconhecido'));
-            ob_clean();
-            echo json_encode(['success' => false, 'error' => 'Erro ao salvar arquivo: ' . ($error ? $error['message'] : 'Erro desconhecido')]);
-        }
-        exit;
+        );
     }
     elseif ($action === 'upload_logo_checkout' && $_SERVER['REQUEST_METHOD'] === 'POST') {
-        require_once __DIR__ . '/../config/config.php';
-        $upload_dir = 'uploads/config/';
-        if (!is_dir($upload_dir)) {
-            mkdir($upload_dir, 0755, true);
-        }
-        
-        if (!isset($_FILES['logo_checkout']) || $_FILES['logo_checkout']['error'] !== UPLOAD_ERR_OK) {
-            ob_clean();
-            echo json_encode(['success' => false, 'error' => 'Erro no upload do arquivo']);
-            exit;
-        }
-        
-        $file = $_FILES['logo_checkout'];
-        $allowed_types = ['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml'];
-        $max_size = 2 * 1024 * 1024; // 2MB
-        
-        if (!in_array($file['type'], $allowed_types)) {
-            ob_clean();
-            echo json_encode(['success' => false, 'error' => 'Tipo de arquivo não permitido. Use JPG, PNG, WEBP ou SVG']);
-            exit;
-        }
-        
-        if ($file['size'] > $max_size) {
-            ob_clean();
-            echo json_encode(['success' => false, 'error' => 'Arquivo muito grande. Máximo 2MB']);
-            exit;
-        }
-        
-        $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
-        $new_name = 'logo_checkout_' . time() . '.' . $ext;
-        $target_path = $upload_dir . $new_name;
-        $target_path_absoluto = __DIR__ . '/../' . $target_path;
-        
-        // Deleta logo antiga se existir
-        $old_logo = getSystemSetting('logo_checkout_url', '');
-        if (!empty($old_logo) && strpos($old_logo, 'http') !== 0) {
-            // Remove barra inicial se houver
-            $old_path = ltrim($old_logo, '/');
-            $old_path_absoluto = __DIR__ . '/../' . $old_path;
-            if (file_exists($old_path_absoluto)) {
-                @unlink($old_path_absoluto);
-            }
-        }
-        
-        // Usa caminho absoluto para move_uploaded_file
-        if (move_uploaded_file($file['tmp_name'], $target_path_absoluto)) {
-            // Salva no banco SEM barra inicial (igual às imagens dos módulos)
-            $logo_checkout_url = $target_path; // Sem barra inicial
-            if (setSystemSetting('logo_checkout_url', $logo_checkout_url)) {
-                ob_clean();
-                echo json_encode(['success' => true, 'message' => 'Logo do checkout enviada com sucesso', 'url' => '/' . $logo_checkout_url]);
-            } else {
-                ob_clean();
-                echo json_encode(['success' => false, 'error' => 'Erro ao salvar configuração no banco de dados']);
-            }
-        } else {
-            $error = error_get_last();
-            error_log("ADMIN_API upload_logo_checkout: Erro ao mover arquivo. Detalhes: " . ($error ? $error['message'] : 'Erro desconhecido'));
-            ob_clean();
-            echo json_encode(['success' => false, 'error' => 'Erro ao salvar arquivo: ' . ($error ? $error['message'] : 'Erro desconhecido')]);
-        }
-        exit;
+        $adminSaveConfigImage(
+            'logo_checkout',
+            'logo_checkout_',
+            ['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml'],
+            2 * 1024 * 1024,
+            'logo_checkout_url',
+            'Logo do checkout enviada com sucesso',
+            'Tipo de arquivo não permitido. Use JPG, PNG, WEBP ou SVG',
+            '2MB'
+        );
     }
     elseif ($action === 'upload_favicon' && $_SERVER['REQUEST_METHOD'] === 'POST') {
-        require_once __DIR__ . '/../config/config.php';
-        $upload_dir = 'uploads/config/';
-        if (!is_dir($upload_dir)) {
-            mkdir($upload_dir, 0755, true);
-        }
-        
-        if (!isset($_FILES['favicon']) || $_FILES['favicon']['error'] !== UPLOAD_ERR_OK) {
-            ob_clean();
-            echo json_encode(['success' => false, 'error' => 'Erro no upload do arquivo']);
-            exit;
-        }
-        
-        $file = $_FILES['favicon'];
-        $allowed_types = ['image/x-icon', 'image/vnd.microsoft.icon', 'image/png', 'image/svg+xml'];
-        $max_size = 2 * 1024 * 1024; // 2MB
-        
-        if (!in_array($file['type'], $allowed_types)) {
-            ob_clean();
-            echo json_encode(['success' => false, 'error' => 'Tipo de arquivo não permitido. Use ICO, PNG ou SVG']);
-            exit;
-        }
-        
-        if ($file['size'] > $max_size) {
-            ob_clean();
-            echo json_encode(['success' => false, 'error' => 'Arquivo muito grande. Máximo 2MB']);
-            exit;
-        }
-        
-        $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
-        $new_name = 'favicon_' . time() . '.' . $ext;
-        $target_path = $upload_dir . $new_name;
-        $target_path_absoluto = __DIR__ . '/../' . $target_path;
-        
-        // Deleta favicon antigo se existir
-        $old_favicon = getSystemSetting('favicon_url', '');
-        if (!empty($old_favicon) && strpos($old_favicon, 'http') !== 0) {
-            // Remove barra inicial se houver
-            $old_path = ltrim($old_favicon, '/');
-            $old_path_absoluto = __DIR__ . '/../' . $old_path;
-            if (file_exists($old_path_absoluto)) {
-                @unlink($old_path_absoluto);
-            }
-        }
-        
-        // Usa caminho absoluto para move_uploaded_file
-        if (move_uploaded_file($file['tmp_name'], $target_path_absoluto)) {
-            // Salva no banco SEM barra inicial (igual às imagens dos módulos)
-            $favicon_url = $target_path; // Sem barra inicial
-            if (setSystemSetting('favicon_url', $favicon_url)) {
-                ob_clean();
-                echo json_encode(['success' => true, 'message' => 'Favicon enviado com sucesso', 'url' => '/' . $favicon_url]);
-            } else {
-                ob_clean();
-                echo json_encode(['success' => false, 'error' => 'Erro ao salvar configuração no banco de dados']);
-            }
-        } else {
-            $error = error_get_last();
-            error_log("ADMIN_API upload_favicon: Erro ao mover arquivo. Detalhes: " . ($error ? $error['message'] : 'Erro desconhecido'));
-            ob_clean();
-            echo json_encode(['success' => false, 'error' => 'Erro ao salvar arquivo: ' . ($error ? $error['message'] : 'Erro desconhecido')]);
-        }
-        exit;
+        $adminSaveConfigImage(
+            'favicon',
+            'favicon_',
+            ['image/x-icon', 'image/vnd.microsoft.icon', 'image/png', 'image/svg+xml'],
+            2 * 1024 * 1024,
+            'favicon_url',
+            'Favicon enviado com sucesso',
+            'Tipo de arquivo não permitido. Use ICO, PNG ou SVG',
+            '2MB'
+        );
     }
     elseif ($action === 'upload_notification_image' && $_SERVER['REQUEST_METHOD'] === 'POST') {
-        require_once __DIR__ . '/../config/config.php';
-        $upload_dir = 'uploads/config/';
-        if (!is_dir($upload_dir)) {
-            mkdir($upload_dir, 0755, true);
-        }
-        
-        if (!isset($_FILES['notification_image']) || $_FILES['notification_image']['error'] !== UPLOAD_ERR_OK) {
-            ob_clean();
-            echo json_encode(['success' => false, 'error' => 'Erro no upload do arquivo']);
-            exit;
-        }
-        
-        $file = $_FILES['notification_image'];
-        $allowed_types = ['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml'];
-        $max_size = 2 * 1024 * 1024; // 2MB
-        
-        if (!in_array($file['type'], $allowed_types)) {
-            ob_clean();
-            echo json_encode(['success' => false, 'error' => 'Tipo de arquivo não permitido. Use JPG, PNG, WEBP ou SVG']);
-            exit;
-        }
-        
-        if ($file['size'] > $max_size) {
-            ob_clean();
-            echo json_encode(['success' => false, 'error' => 'Arquivo muito grande. Máximo 2MB']);
-            exit;
-        }
-        
-        $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
-        $new_name = 'notification_image_' . time() . '.' . $ext;
-        $target_path = $upload_dir . $new_name;
-        $target_path_absoluto = __DIR__ . '/../' . $target_path;
-        
-        // Deleta imagem antiga se existir
-        $old_image = getSystemSetting('notification_image_url', '');
-        if (!empty($old_image) && strpos($old_image, 'http') !== 0) {
-            $old_path = ltrim($old_image, '/');
-            $old_path_absoluto = __DIR__ . '/../' . $old_path;
-            if (file_exists($old_path_absoluto)) {
-                @unlink($old_path_absoluto);
-            }
-        }
-        
-        if (move_uploaded_file($file['tmp_name'], $target_path_absoluto)) {
-            $notification_image_url = $target_path;
-            if (setSystemSetting('notification_image_url', $notification_image_url)) {
-                ob_clean();
-                echo json_encode(['success' => true, 'message' => 'Imagem das notificações enviada com sucesso', 'url' => '/' . $notification_image_url]);
-            } else {
-                ob_clean();
-                echo json_encode(['success' => false, 'error' => 'Erro ao salvar configuração no banco de dados']);
-            }
-        } else {
-            $error = error_get_last();
-            error_log("ADMIN_API upload_notification_image: Erro ao mover arquivo. Detalhes: " . ($error ? $error['message'] : 'Erro desconhecido'));
-            ob_clean();
-            echo json_encode(['success' => false, 'error' => 'Erro ao salvar arquivo: ' . ($error ? $error['message'] : 'Erro desconhecido')]);
-        }
-        exit;
+        $adminSaveConfigImage(
+            'notification_image',
+            'notification_image_',
+            ['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml'],
+            2 * 1024 * 1024,
+            'notification_image_url',
+            'Imagem das notificações enviada com sucesso',
+            'Tipo de arquivo não permitido. Use JPG, PNG, WEBP ou SVG',
+            '2MB'
+        );
     }
     elseif ($action === 'upload_security_seal' && $_SERVER['REQUEST_METHOD'] === 'POST') {
-        require_once __DIR__ . '/../config/config.php';
-        $upload_dir = 'uploads/config/';
-        if (!is_dir($upload_dir)) {
-            mkdir($upload_dir, 0755, true);
-        }
-        
-        if (!isset($_FILES['security_seal']) || $_FILES['security_seal']['error'] !== UPLOAD_ERR_OK) {
-            ob_clean();
-            echo json_encode(['success' => false, 'error' => 'Erro no upload do arquivo']);
-            exit;
-        }
-        
-        $file = $_FILES['security_seal'];
-        $allowed_types = ['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml'];
-        $max_size = 2 * 1024 * 1024; // 2MB
-        
-        if (!in_array($file['type'], $allowed_types)) {
-            ob_clean();
-            echo json_encode(['success' => false, 'error' => 'Tipo de arquivo não permitido. Use JPG, PNG, WEBP ou SVG']);
-            exit;
-        }
-        
-        if ($file['size'] > $max_size) {
-            ob_clean();
-            echo json_encode(['success' => false, 'error' => 'Arquivo muito grande. Máximo 2MB']);
-            exit;
-        }
-        
-        $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
-        $new_name = 'security_seal_' . time() . '.' . $ext;
-        $target_path = $upload_dir . $new_name;
-        $target_path_absoluto = __DIR__ . '/../' . $target_path;
-        
-        // Deleta selo antigo se existir
-        $old_seal = getSystemSetting('security_seal_url', '');
-        if (!empty($old_seal) && strpos($old_seal, 'http') !== 0) {
-            $old_path = ltrim($old_seal, '/');
-            $old_path_absoluto = __DIR__ . '/../' . $old_path;
-            if (file_exists($old_path_absoluto)) {
-                @unlink($old_path_absoluto);
-            }
-        }
-        
-        if (move_uploaded_file($file['tmp_name'], $target_path_absoluto)) {
-            $security_seal_url = $target_path;
-            if (setSystemSetting('security_seal_url', $security_seal_url)) {
-                ob_clean();
-                echo json_encode(['success' => true, 'message' => 'Selo de segurança enviado com sucesso', 'url' => '/' . $security_seal_url]);
-            } else {
-                ob_clean();
-                echo json_encode(['success' => false, 'error' => 'Erro ao salvar configuração no banco de dados']);
-            }
-        } else {
-            $error = error_get_last();
-            error_log("ADMIN_API upload_security_seal: Erro ao mover arquivo. Detalhes: " . ($error ? $error['message'] : 'Erro desconhecido'));
-            ob_clean();
-            echo json_encode(['success' => false, 'error' => 'Erro ao salvar arquivo: ' . ($error ? $error['message'] : 'Erro desconhecido')]);
-        }
-        exit;
+        $adminSaveConfigImage(
+            'security_seal',
+            'security_seal_',
+            ['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml'],
+            2 * 1024 * 1024,
+            'security_seal_url',
+            'Selo de segurança enviado com sucesso',
+            'Tipo de arquivo não permitido. Use JPG, PNG, WEBP ou SVG',
+            '2MB'
+        );
     }
     elseif ($action === 'delete_security_seal' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         require_once __DIR__ . '/../config/config.php';
-        
-        // Deleta selo se existir
-        $old_seal = getSystemSetting('security_seal_url', '');
-        if (!empty($old_seal) && strpos($old_seal, 'http') !== 0) {
-            $old_path = ltrim($old_seal, '/');
-            $old_path_absoluto = __DIR__ . '/../' . $old_path;
-            if (file_exists($old_path_absoluto)) {
-                @unlink($old_path_absoluto);
-            }
-        }
+
+        delete_local_upload_file(getSystemSetting('security_seal_url', ''));
         
         // Remove do banco
         if (setSystemSetting('security_seal_url', '')) {
@@ -1708,11 +1470,16 @@ try {
             echo json_encode(['success' => false, 'error' => 'Arquivo maior que 2MB']);
             exit;
         }
-        $uploads_dir = __DIR__ . '/../uploads';
-        if (!is_dir($uploads_dir)) mkdir($uploads_dir, 0755, true);
+        $uploads_dir = dirname(__DIR__) . '/uploads';
+        $ensured = ensure_writable_upload_dir($uploads_dir);
+        if (!$ensured['ok']) {
+            ob_clean();
+            echo json_encode(['success' => false, 'error' => $ensured['error']]);
+            exit;
+        }
         $ext = pathinfo($_FILES['pwa_icon']['name'], PATHINFO_EXTENSION) ?: 'png';
         $name = 'pwa_icon_' . time() . '.' . (preg_match('/^[a-z0-9]+$/i', $ext) ? $ext : 'png');
-        $path = $uploads_dir . '/' . $name;
+        $path = $ensured['dir'] . '/' . $name;
         if (!move_uploaded_file($_FILES['pwa_icon']['tmp_name'], $path)) {
             ob_clean();
             echo json_encode(['success' => false, 'error' => 'Erro ao mover arquivo']);
