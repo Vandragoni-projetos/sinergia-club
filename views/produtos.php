@@ -643,7 +643,7 @@ $produtos = array_filter(array_map(function($item) {
                             <div class="feed-pos-control absolute bottom-2 left-2 z-30 flex items-center gap-0.5 bg-black/70 backdrop-blur-sm rounded-lg pl-1.5 pr-0.5 py-0.5" onpointerdown="event.stopPropagation();" onmousedown="event.stopPropagation();">
                                 <span class="text-[10px] text-gray-300 font-medium select-none">Pos.</span>
                                 <button type="button" data-feed-pos-label class="min-w-[1.5rem] px-0.5 text-xs font-semibold text-white hover:text-[#32e768] cursor-text" title="Clique para alterar a posição"><?php echo $feed_pos_ui; ?></button>
-                                <input type="number" min="1" step="1" inputmode="numeric" data-feed-pos-input
+                                <input type="text" inputmode="numeric" pattern="[0-9]*" data-feed-pos-input
                                        class="hidden w-12 bg-black/50 border border-white/30 rounded px-0.5 text-center text-xs font-semibold text-white focus:outline-none focus:ring-1 focus:ring-[#32e768]"
                                        value="<?php echo $feed_pos_ui; ?>"
                                        aria-label="Posição no feed">
@@ -748,7 +748,7 @@ $produtos = array_filter(array_map(function($item) {
                                 <div class="feed-pos-control absolute bottom-2 left-2 z-30 flex items-center gap-0.5 bg-black/70 backdrop-blur-sm rounded-lg pl-1.5 pr-0.5 py-0.5" onpointerdown="event.stopPropagation();" onmousedown="event.stopPropagation();">
                                     <span class="text-[10px] text-gray-300 font-medium select-none">Pos.</span>
                                     <button type="button" data-feed-pos-label class="min-w-[1.5rem] px-0.5 text-xs font-semibold text-white hover:text-[#32e768] cursor-text" title="Clique para alterar a posição"><?php echo $feed_pos_ui; ?></button>
-                                    <input type="number" min="1" step="1" inputmode="numeric" data-feed-pos-input
+                                    <input type="text" inputmode="numeric" pattern="[0-9]*" data-feed-pos-input
                                            class="hidden w-12 bg-black/50 border border-white/30 rounded px-0.5 text-center text-xs font-semibold text-white focus:outline-none focus:ring-1 focus:ring-[#32e768]"
                                            value="<?php echo $feed_pos_ui; ?>"
                                            aria-label="Posição no feed">
@@ -1059,22 +1059,35 @@ $produtos = array_filter(array_map(function($item) {
         }
 
         if (lista) {
-            lista.addEventListener('click', function(e) {
-                const label = e.target.closest('[data-feed-pos-label]');
-                if (label) {
-                    e.preventDefault();
-                    startFeedPosEdit(label.closest('.feed-pos-control'));
-                    return;
-                }
-                const go = e.target.closest('[data-feed-pos-go]');
-                if (!go) return;
-                e.preventDefault();
-                const controle = go.closest('.feed-pos-control');
+            let feedPosGoLock = false;
+            function acionarSetaPosicao(controle) {
+                if (!controle || feedPosGoLock) return;
+                feedPosGoLock = true;
+                setTimeout(function() { feedPosGoLock = false; }, 300);
                 if (!controle.classList.contains('is-editing')) {
                     startFeedPosEdit(controle);
                     return;
                 }
                 aplicarPosicaoDoControle(controle);
+            }
+            lista.addEventListener('pointerdown', function(e) {
+                const go = e.target.closest('[data-feed-pos-go]');
+                if (!go) return;
+                e.stopPropagation();
+                acionarSetaPosicao(go.closest('.feed-pos-control'));
+            }, true);
+            lista.addEventListener('click', function(e) {
+                const go = e.target.closest('[data-feed-pos-go]');
+                if (go) {
+                    e.preventDefault();
+                    acionarSetaPosicao(go.closest('.feed-pos-control'));
+                    return;
+                }
+                const label = e.target.closest('[data-feed-pos-label]');
+                if (label) {
+                    e.preventDefault();
+                    startFeedPosEdit(label.closest('.feed-pos-control'));
+                }
             }, true);
             lista.addEventListener('keydown', function(e) {
                 const input = e.target.closest('[data-feed-pos-input]');
