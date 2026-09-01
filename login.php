@@ -279,63 +279,27 @@ $forgot_password_api_url = (in_array($fp_script_dir, ['/', '.', ''], true) ? '' 
                 0 0 0 1px rgba(255, 255, 255, 0.05);
         }
 
-        /* Checkbox customizado — tamanhos inline para não depender só do Tailwind */
-        .custom-checkbox {
-            position: relative;
+        /* Checkbox customizado */
+        .custom-checkbox input:checked + div {
+            background-color: var(--accent-primary) !important;
+            border-color: var(--accent-primary) !important;
         }
-        .custom-checkbox input[type="checkbox"] {
-            position: absolute;
-            width: 1px;
-            height: 1px;
-            padding: 0;
-            margin: -1px;
-            overflow: hidden;
-            clip: rect(0, 0, 0, 0);
-            white-space: nowrap;
-            border: 0;
-            opacity: 0;
-            pointer-events: none;
+        .custom-checkbox input:checked + div svg {
+            display: block;
         }
-        .custom-checkbox .check-ui {
+        .custom-checkbox .relative > input + div {
             width: 20px;
             height: 20px;
             min-width: 20px;
             min-height: 20px;
-            border: 2px solid #9ca3af;
-            border-radius: 6px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            background-color: #1a1f24;
-            flex-shrink: 0;
             box-sizing: border-box;
-        }
-        .custom-checkbox:hover .check-ui {
-            border-color: var(--accent-primary);
-        }
-        .custom-checkbox input:checked + .check-ui {
-            background-color: var(--accent-primary) !important;
-            border-color: var(--accent-primary) !important;
-        }
-        .custom-checkbox input:checked + .check-ui svg {
-            display: block !important;
         }
         #robot-checkbox {
             width: 32px;
             height: 32px;
             min-width: 32px;
             min-height: 32px;
-            border: 2px solid #9ca3af;
-            border-radius: 8px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            background-color: #1a1f24;
-            flex-shrink: 0;
             box-sizing: border-box;
-        }
-        #robot-check:hover #robot-checkbox {
-            border-color: var(--accent-primary);
         }
     </style>
 </head>
@@ -360,11 +324,11 @@ $forgot_password_api_url = (in_array($fp_script_dir, ['/', '.', ''], true) ? '' 
 
             <div class="relative z-20 mb-8 max-w-lg">
                 <h1 class="text-5xl font-bold text-white mb-4 leading-tight">
-                    Transforme ideias em vendas. <br>
-                    <span class="text-transparent bg-clip-text" style="background-image: linear-gradient(to right, var(--accent-primary), rgba(50, 231, 104, 0.6));">Venda mais. Cresça todos os dias.</span>
+                    Escale suas vendas <br>
+                    <span class="text-transparent bg-clip-text" style="background-image: linear-gradient(to right, var(--accent-primary), rgba(50, 231, 104, 0.6));">sem limites.</span>
                 </h1>
                 <p class="text-gray-300 text-lg leading-relaxed">
-                    Produtos digitais, ferramentas e soluções para quem quer transformar conhecimento em resultado.
+                    Junte-se a milhares de empreendedores que faturam todos os dias com nossa tecnologia de alta performance.
                 </p>
             </div>
         </div>
@@ -437,10 +401,12 @@ $forgot_password_api_url = (in_array($fp_script_dir, ['/', '.', ''], true) ? '' 
 
                         <!-- Checkbox "Lembrar-me" -->
                         <div class="flex items-center justify-between">
-                            <label for="remember" class="custom-checkbox flex items-center gap-3 cursor-pointer group">
-                                <input type="checkbox" name="remember" id="remember" class="peer sr-only">
-                                <div class="check-ui" aria-hidden="true">
-                                    <svg class="w-3.5 h-3.5 text-white hidden" width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                            <label class="custom-checkbox flex items-center gap-3 cursor-pointer group">
+                                <div class="relative">
+                                    <input type="checkbox" name="remember" class="peer sr-only">
+                                    <div class="w-5 h-5 border-2 rounded-md transition-all duration-200 flex items-center justify-center" style="border-color: #9ca3af; background-color: #1a1f24;" onmouseover="this.style.borderColor='var(--accent-primary)'" onmouseout="this.style.borderColor='#9ca3af'">
+                                        <svg class="w-3.5 h-3.5 text-white hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                                    </div>
                                 </div>
                                 <span class="text-sm font-medium text-gray-400 group-hover:text-gray-300 select-none">Lembrar meu acesso</span>
                             </label>
@@ -451,11 +417,11 @@ $forgot_password_api_url = (in_array($fp_script_dir, ['/', '.', ''], true) ? '' 
                     </div>
 
                     <!-- Verificação "Não sou um robô" -->
-                    <div id="robot-check" role="checkbox" aria-checked="false" tabindex="0" class="border-2 rounded-xl p-4 transition-all duration-300 cursor-pointer hover:scale-[1.02]" style="border-color: rgba(255, 255, 255, 0.1); background-color: rgba(15, 20, 25, 0.5);" onclick="toggleRobotCheck()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleRobotCheck();}">
+                    <div id="robot-check" class="border-2 rounded-xl p-4 transition-all duration-300 cursor-pointer hover:scale-[1.02]" style="border-color: rgba(255, 255, 255, 0.1); background-color: rgba(15, 20, 25, 0.5);" onclick="toggleRobotCheck()">
                         <div class="flex items-center justify-between">
                             <div class="flex items-center gap-3">
-                                <div id="robot-checkbox" aria-hidden="true">
-                                    <svg id="robot-check-icon" class="w-5 h-5 text-white hidden" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                                <div id="robot-checkbox" class="w-8 h-8 border-2 rounded-lg transition-all duration-300 flex items-center justify-center" style="border-color: #9ca3af; background-color: #1a1f24;">
+                                    <svg id="robot-check-icon" class="w-5 h-5 text-white hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
                                 </div>
                                 <span id="robot-text" class="text-sm font-medium text-gray-300">Não sou um robô</span>
                             </div>
@@ -552,6 +518,8 @@ $forgot_password_api_url = (in_array($fp_script_dir, ['/', '.', ''], true) ? '' 
     </div>
 
     <script>
+        lucide.createIcons();
+
         // Verificação de robô
         let isVerified = false;
 
@@ -561,7 +529,6 @@ $forgot_password_api_url = (in_array($fp_script_dir, ['/', '.', ''], true) ? '' 
             const robotText = document.getElementById('robot-text');
             const robotCheck = document.getElementById('robot-check');
             const submitBtn = document.getElementById('submit-btn');
-            if (!checkbox || !checkIcon || !robotText || !robotCheck || !submitBtn) return;
             
             if (!isVerified) {
                 // Ativar verificação
@@ -573,7 +540,6 @@ $forgot_password_api_url = (in_array($fp_script_dir, ['/', '.', ''], true) ? '' 
                 robotText.style.color = 'var(--accent-primary)';
                 robotCheck.style.borderColor = 'var(--accent-primary)';
                 robotCheck.style.backgroundColor = 'rgba(50, 231, 104, 0.05)';
-                robotCheck.setAttribute('aria-checked', 'true');
                 
                 // Habilitar botão de submit
                 submitBtn.disabled = false;
@@ -611,14 +577,12 @@ $forgot_password_api_url = (in_array($fp_script_dir, ['/', '.', ''], true) ? '' 
         });
 
         const wrapper = document.getElementById('notifications-wrapper');
-        const names = ['Fernanda L.', 'Gabriel S.', 'Beatriz C.', 'Lucas R.', 'Mariana P.', 'Carlos M.', 'Juliana A.', 'Rafael T.'];
+        const names = ['Gabriel S.', 'Amanda M.', 'Lucas R.', 'Beatriz C.', 'João P.', 'Fernanda L.'];
         const notificationImageUrl = '<?php echo htmlspecialchars($notification_image_url); ?>';
-        const ticketValues = [19.90, 27.90, 29.90, 37.90, 47.90, 59.90, 67.90];
         const actions = [
-            { type: 'Venda Aprovada', icon: 'check-circle', color: 'text-green-500' },
-            { type: 'Venda Cartão', icon: 'credit-card', color: 'text-orange-500' },
-            { type: 'PIX Gerado', icon: 'qr-code', color: 'text-blue-500' },
-            { type: 'PIX Aprovado', icon: 'check-circle', color: 'text-green-500' }
+            { type: 'Venda Aprovada', icon: 'check-circle', color: 'text-green-500', valueRange: [47, 297] },
+            { type: 'PIX Gerado', icon: 'qr-code', color: 'text-blue-500', valueRange: [97, 197] },
+            { type: 'Venda Cartão', icon: 'credit-card', color: 'text-orange-500', valueRange: [147, 497] }
         ];
 
         function formatCurrency(value) {
@@ -632,7 +596,7 @@ $forgot_password_api_url = (in_array($fp_script_dir, ['/', '.', ''], true) ? '' 
 
             const randomName = names[Math.floor(Math.random() * names.length)];
             const randomAction = actions[Math.floor(Math.random() * actions.length)];
-            const randomValue = ticketValues[Math.floor(Math.random() * ticketValues.length)];
+            const randomValue = Math.floor(Math.random() * (randomAction.valueRange[1] - randomAction.valueRange[0]) + randomAction.valueRange[0]) + 0.90;
 
             // Obtém a cor primária para o gradiente
             const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--accent-primary').trim();
@@ -770,10 +734,6 @@ $forgot_password_api_url = (in_array($fp_script_dir, ['/', '.', ''], true) ? '' 
                 closeForgotPasswordModal();
             }
         });
-
-        try {
-            if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
-        } catch (e) { /* ícones são opcionais */ }
     </script>
 </body>
 </html>
