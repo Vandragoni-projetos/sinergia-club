@@ -1318,6 +1318,7 @@ ALTER TABLE `plugins`
 --
 ALTER TABLE `products_feed_items`
   ADD UNIQUE KEY `unique_item` (`usuario_id`,`community_id`,`item_type`,`item_id`),
+  ADD UNIQUE KEY `unique_user_item` (`usuario_id`,`item_type`,`item_id`),
   ADD KEY `idx_order` (`usuario_id`,`community_id`,`sort_order`);
 
 --
