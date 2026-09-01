@@ -640,7 +640,7 @@ $produtos = array_filter(array_map(function($item) {
                                     <span class="text-xs font-medium">Sem imagem</span>
                                 </div>
                             <?php endif; ?>
-                            <div class="feed-pos-control absolute bottom-2 left-2 z-30 flex items-center gap-0.5 bg-black/70 backdrop-blur-sm rounded-lg pl-1.5 pr-0.5 py-0.5" onpointerdown="event.stopPropagation();" onmousedown="event.stopPropagation();" onclick="event.stopPropagation();">
+                            <div class="feed-pos-control absolute bottom-2 left-2 z-30 flex items-center gap-0.5 bg-black/70 backdrop-blur-sm rounded-lg pl-1.5 pr-0.5 py-0.5" onpointerdown="event.stopPropagation();" onmousedown="event.stopPropagation();">
                                 <span class="text-[10px] text-gray-300 font-medium select-none">Pos.</span>
                                 <button type="button" data-feed-pos-label class="min-w-[1.5rem] px-0.5 text-xs font-semibold text-white hover:text-[#32e768] cursor-text" title="Clique para alterar a posição"><?php echo $feed_pos_ui; ?></button>
                                 <input type="number" min="1" step="1" inputmode="numeric" data-feed-pos-input
@@ -745,7 +745,7 @@ $produtos = array_filter(array_map(function($item) {
                             <!-- Capa do Banner (aspect-ratio 2:3) -->
                             <div class="relative overflow-hidden bg-dark-elevated" style="aspect-ratio: 2/3;">
                                 <img src="<?php echo htmlspecialchars($banner_img); ?>" alt="<?php echo htmlspecialchars($banner['titulo'] ?: 'Banner'); ?>" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 pointer-events-none">
-                                <div class="feed-pos-control absolute bottom-2 left-2 z-30 flex items-center gap-0.5 bg-black/70 backdrop-blur-sm rounded-lg pl-1.5 pr-0.5 py-0.5" onpointerdown="event.stopPropagation();" onmousedown="event.stopPropagation();" onclick="event.stopPropagation();">
+                                <div class="feed-pos-control absolute bottom-2 left-2 z-30 flex items-center gap-0.5 bg-black/70 backdrop-blur-sm rounded-lg pl-1.5 pr-0.5 py-0.5" onpointerdown="event.stopPropagation();" onmousedown="event.stopPropagation();">
                                     <span class="text-[10px] text-gray-300 font-medium select-none">Pos.</span>
                                     <button type="button" data-feed-pos-label class="min-w-[1.5rem] px-0.5 text-xs font-semibold text-white hover:text-[#32e768] cursor-text" title="Clique para alterar a posição"><?php echo $feed_pos_ui; ?></button>
                                     <input type="number" min="1" step="1" inputmode="numeric" data-feed-pos-input
@@ -1075,7 +1075,7 @@ $produtos = array_filter(array_map(function($item) {
                     return;
                 }
                 aplicarPosicaoDoControle(controle);
-            });
+            }, true);
             lista.addEventListener('keydown', function(e) {
                 const input = e.target.closest('[data-feed-pos-input]');
                 if (!input) return;
