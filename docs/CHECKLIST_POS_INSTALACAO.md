@@ -17,6 +17,7 @@ Ambiente: `https://________________`
 - [ ] Cadastro de produto
 - [ ] Categoria principal e subcategoria (criar no painel do vendedor)
 - [ ] Upload de imagem do produto em `uploads/`
+- [ ] Admin → Configurações: enviar logo do sistema (grava em `uploads/config/`)
 - [ ] Cupom (criar e aplicar no checkout)
 
 ## Checkout e membros

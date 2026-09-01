@@ -103,7 +103,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function fetchAdminData() {
-        fetch('/api/admin_api?action=get_admin_dashboard_data')
+        fetch('/api/admin_api.php?action=get_admin_dashboard_data', { credentials: 'same-origin', cache: 'no-store' })
             .then(response => {
                 if (!response.ok) {
                     throw new Error('Network response was not ok');

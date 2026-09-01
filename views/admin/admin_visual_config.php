@@ -193,6 +193,15 @@ if (!empty($current_theme['login_banner_url'])) {
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     lucide.createIcons();
+    const _nativeFetch = window.fetch.bind(window);
+    window.fetch = function(input, init) {
+        init = init || {};
+        if (typeof input === 'string' && input.indexOf('/api/admin_api') === 0) {
+            if (!init.credentials) init.credentials = 'same-origin';
+            if (!init.cache) init.cache = 'no-store';
+        }
+        return _nativeFetch(input, init);
+    };
     
     const theme = <?php echo json_encode($current_theme); ?>;
     const statusEl = document.getElementById('status-message');
@@ -295,7 +304,7 @@ document.addEventListener('DOMContentLoaded', function() {
             fontSans: document.getElementById('theme-font').value
         };
         try {
-            const r = await fetch('/api/admin_api?action=save_theme', {
+            const r = await fetch('/api/admin_api.php?action=save_theme', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data)
@@ -365,7 +374,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const fd = new FormData();
         fd.append('logo', f);
         try {
-            const r = await fetch('/api/admin_api?action=upload_logo', { method: 'POST', body: fd });
+            const r = await fetch('/api/admin_api.php?action=upload_logo', { method: 'POST', credentials: 'same-origin', cache: 'no-store', body: fd });
             const res = await r.json();
             if (res.success) {
                 const img = document.getElementById('theme-logo-preview');
@@ -388,7 +397,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const fd = new FormData();
         fd.append('login_image', f);
         try {
-            const r = await fetch('/api/admin_api?action=upload_login_image', { method: 'POST', body: fd });
+            const r = await fetch('/api/admin_api.php?action=upload_login_image', { method: 'POST', credentials: 'same-origin', cache: 'no-store', body: fd });
             const res = await r.json();
             if (res.success) {
                 const img = document.getElementById('theme-banner-preview');

@@ -139,7 +139,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Carregar configurações atuais
     async function loadSettings() {
         try {
-            const response = await fetch('/api/admin_api?action=get_system_settings');
+            const response = await fetch('/api/admin_api.php?action=get_system_settings');
             const result = await response.json();
             
             if (result.success && result.data) {
@@ -235,7 +235,7 @@ document.addEventListener('DOMContentLoaded', function() {
         saveColorBtn.textContent = 'Salvando...';
         
         try {
-            const response = await fetch('/api/admin_api?action=save_system_settings', {
+            const response = await fetch('/api/admin_api.php?action=save_system_settings', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ cor_primaria: cor })
@@ -290,8 +290,10 @@ document.addEventListener('DOMContentLoaded', function() {
         uploadLogoBtn.textContent = 'Enviando...';
         
         try {
-            const response = await fetch('/api/admin_api?action=upload_logo', {
+            const response = await fetch('/api/admin_api.php?action=upload_logo', {
                 method: 'POST',
+                credentials: 'same-origin',
+                cache: 'no-store',
                 body: formData
             });
             const result = await response.json();
@@ -344,7 +346,7 @@ document.addEventListener('DOMContentLoaded', function() {
         uploadLoginImageBtn.textContent = 'Enviando...';
         
         try {
-            const response = await fetch('/api/admin_api?action=upload_login_image', {
+            const response = await fetch('/api/admin_api.php?action=upload_login_image', {
                 method: 'POST',
                 body: formData
             });

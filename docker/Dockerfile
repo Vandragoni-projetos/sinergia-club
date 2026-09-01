@@ -46,20 +46,16 @@ COPY . .
 # Instalar dependências do Composer no build
 RUN composer install --no-dev --prefer-dist --no-interaction --optimize-autoloader
 
-# Script de entrypoint: garante vendor/ se volume sobrescrever (ex.: Easypanel)
-RUN echo '#!/bin/bash' > /entrypoint-app.sh \
-    && echo 'set -e' >> /entrypoint-app.sh \
-    && echo 'if [ ! -f /var/www/html/vendor/autoload.php ]; then' >> /entrypoint-app.sh \
-    && echo '  echo "[SinergIA] vendor/ não encontrado. Executando composer install..."' >> /entrypoint-app.sh \
-    && echo '  cd /var/www/html && composer install --no-dev --prefer-dist --no-interaction --optimize-autoloader' >> /entrypoint-app.sh \
-    && echo '  chown -R www-data:www-data /var/www/html/vendor 2>/dev/null || true' >> /entrypoint-app.sh \
-    && echo '  echo "[SinergIA] composer install concluído."' >> /entrypoint-app.sh \
-    && echo 'fi' >> /entrypoint-app.sh \
-    && echo 'exec "$@"' >> /entrypoint-app.sh \
-    && chmod +x /entrypoint-app.sh
+# Entrypoint: vendor/ se volume sobrescrever + uploads/ gravável (volume Docker)
+COPY docker/entrypoint-app.sh /entrypoint-app.sh
+RUN chmod +x /entrypoint-app.sh
 
 # Permissões: aplicação e uploads gravável pelo www-data
-RUN mkdir -p /var/www/html/uploads \
+# (o volume em runtime pode ocultar esta pasta; o entrypoint recria/ajusta)
+RUN mkdir -p /var/www/html/uploads/config \
+        /var/www/html/uploads/aula_covers \
+        /var/www/html/uploads/aula_files \
+        /var/www/html/uploads/legal \
     && chown -R www-data:www-data /var/www/html \
     && chmod -R 775 /var/www/html/uploads
 

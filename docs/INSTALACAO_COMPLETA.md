@@ -73,7 +73,7 @@ Passos que a plataforma realmente precisa (não inventar serviços extras):
 4. Crie um **serviço de banco** separado (MySQL/MariaDB do EasyPanel). **Não** use `docker/Dockerfile.db`: esse arquivo está duplicado da imagem PHP e **não** sobe MariaDB.
 5. **Não** use `docker-compose.yml` como blueprint de produção (senhas de exemplo no Compose; serviço `db` apontando para o Dockerfile errado).
 6. Porta interna da app: **80** (o EasyPanel mapeia o domínio).
-7. Volume persistente: monte um volume em `/var/www/html/uploads` (uploads de usuários, certificados Efí `.p12`, mídia).
+7. Volume persistente: monte um volume em `/var/www/html/uploads` (uploads de usuários, certificados Efí `.p12`, mídia). O entrypoint cria `uploads/config` e ajusta dono/permissões (`www-data`, `775`) na subida — necessário para o upload de logo em Configurações.
 8. Após o primeiro deploy, o banco ainda está vazio — importe `database/install.sql` (seção 4).
 
 Não há health check HTTP definido na imagem da aplicação. O Compose local só tem healthcheck no serviço de banco (e esse serviço Compose não é confiável).

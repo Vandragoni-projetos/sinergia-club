@@ -123,12 +123,18 @@ RewriteRule ^(notification|process_payment|check_status)/?$ $1.php [L,QSA]
 RewriteCond %{REQUEST_URI} ^/(notification|process_payment|check_status)\.php$ [NC]
 RewriteRule ^ - [L]
 
-# Exceção para arquivos da API
+# APIs: /api/nome e /api/nome.php → api/nome.php (GET e POST, inclusive upload multipart)
+RewriteCond %{REQUEST_URI} ^/api/([A-Za-z0-9_-]+)(\.php)?/?$ [NC]
+RewriteCond %{DOCUMENT_ROOT}/api/%1.php -f
+RewriteRule ^api/([A-Za-z0-9_-]+)(\.php)?/?$ api/$1.php [L,QSA]
+
+# Exceção para arquivos da API (já reescritos ou acesso direto)
 RewriteCond %{REQUEST_URI} ^/api/.*\.php
 RewriteRule ^ - [L]
 
-# Redireciona .php para URL limpa (somente GET)
+# Redireciona .php para URL limpa (somente GET) — não aplica em /api/ (quebra POST/upload)
 RewriteCond %{REQUEST_METHOD} GET
+RewriteCond %{REQUEST_URI} !^/api/ [NC]
 RewriteCond %{THE_REQUEST} \s/+(.*)\.php[\s?]
 RewriteRule ^ %1 [R=301,L]
 
