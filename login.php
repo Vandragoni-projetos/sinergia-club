@@ -287,6 +287,20 @@ $forgot_password_api_url = (in_array($fp_script_dir, ['/', '.', ''], true) ? '' 
         .custom-checkbox input:checked + div svg {
             display: block;
         }
+        .custom-checkbox .relative > input + div {
+            width: 20px;
+            height: 20px;
+            min-width: 20px;
+            min-height: 20px;
+            box-sizing: border-box;
+        }
+        #robot-checkbox {
+            width: 32px;
+            height: 32px;
+            min-width: 32px;
+            min-height: 32px;
+            box-sizing: border-box;
+        }
     </style>
 </head>
 <body class="min-h-screen" style="background-color: var(--theme-bg, #07090d);">
@@ -390,7 +404,7 @@ $forgot_password_api_url = (in_array($fp_script_dir, ['/', '.', ''], true) ? '' 
                             <label class="custom-checkbox flex items-center gap-3 cursor-pointer group">
                                 <div class="relative">
                                     <input type="checkbox" name="remember" class="peer sr-only">
-                                    <div class="w-5 h-5 border-2 rounded-md transition-all duration-200 flex items-center justify-center" style="border-color: rgba(255, 255, 255, 0.1); background-color: #0f1419;" onmouseover="this.style.borderColor='var(--accent-primary)'" onmouseout="this.style.borderColor='rgba(255, 255, 255, 0.1)'">
+                                    <div class="w-5 h-5 border-2 rounded-md transition-all duration-200 flex items-center justify-center" style="border-color: #9ca3af; background-color: #1a1f24;" onmouseover="this.style.borderColor='var(--accent-primary)'" onmouseout="this.style.borderColor='#9ca3af'">
                                         <svg class="w-3.5 h-3.5 text-white hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
                                     </div>
                                 </div>
@@ -406,7 +420,7 @@ $forgot_password_api_url = (in_array($fp_script_dir, ['/', '.', ''], true) ? '' 
                     <div id="robot-check" class="border-2 rounded-xl p-4 transition-all duration-300 cursor-pointer hover:scale-[1.02]" style="border-color: rgba(255, 255, 255, 0.1); background-color: rgba(15, 20, 25, 0.5);" onclick="toggleRobotCheck()">
                         <div class="flex items-center justify-between">
                             <div class="flex items-center gap-3">
-                                <div id="robot-checkbox" class="w-8 h-8 border-2 rounded-lg transition-all duration-300 flex items-center justify-center" style="border-color: rgba(255, 255, 255, 0.2); background-color: #0f1419;">
+                                <div id="robot-checkbox" class="w-8 h-8 border-2 rounded-lg transition-all duration-300 flex items-center justify-center" style="border-color: #9ca3af; background-color: #1a1f24;">
                                     <svg id="robot-check-icon" class="w-5 h-5 text-white hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
                                 </div>
                                 <span id="robot-text" class="text-sm font-medium text-gray-300">Não sou um robô</span>
