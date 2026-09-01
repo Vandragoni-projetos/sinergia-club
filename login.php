@@ -279,13 +279,57 @@ $forgot_password_api_url = (in_array($fp_script_dir, ['/', '.', ''], true) ? '' 
                 0 0 0 1px rgba(255, 255, 255, 0.05);
         }
 
-        /* Checkbox customizado */
-        .custom-checkbox input:checked + div {
+        /* Checkbox customizado — tamanhos inline para não depender só do Tailwind */
+        .custom-checkbox {
+            position: relative;
+        }
+        .custom-checkbox input[type="checkbox"] {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+            opacity: 0;
+            pointer-events: none;
+        }
+        .custom-checkbox .check-ui {
+            width: 20px;
+            height: 20px;
+            min-width: 20px;
+            min-height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            border-radius: 6px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #0f1419;
+            flex-shrink: 0;
+            box-sizing: border-box;
+        }
+        .custom-checkbox input:checked + .check-ui {
             background-color: var(--accent-primary) !important;
             border-color: var(--accent-primary) !important;
         }
-        .custom-checkbox input:checked + div svg {
-            display: block;
+        .custom-checkbox input:checked + .check-ui svg {
+            display: block !important;
+        }
+        #robot-checkbox {
+            width: 32px;
+            height: 32px;
+            min-width: 32px;
+            min-height: 32px;
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #0f1419;
+            flex-shrink: 0;
+            box-sizing: border-box;
         }
     </style>
 </head>
@@ -387,12 +431,10 @@ $forgot_password_api_url = (in_array($fp_script_dir, ['/', '.', ''], true) ? '' 
 
                         <!-- Checkbox "Lembrar-me" -->
                         <div class="flex items-center justify-between">
-                            <label class="custom-checkbox flex items-center gap-3 cursor-pointer group">
-                                <div class="relative">
-                                    <input type="checkbox" name="remember" class="peer sr-only">
-                                    <div class="w-5 h-5 border-2 rounded-md transition-all duration-200 flex items-center justify-center" style="border-color: rgba(255, 255, 255, 0.1); background-color: #0f1419;" onmouseover="this.style.borderColor='var(--accent-primary)'" onmouseout="this.style.borderColor='rgba(255, 255, 255, 0.1)'">
-                                        <svg class="w-3.5 h-3.5 text-white hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
-                                    </div>
+                            <label for="remember" class="custom-checkbox flex items-center gap-3 cursor-pointer group">
+                                <input type="checkbox" name="remember" id="remember" class="peer sr-only">
+                                <div class="check-ui" aria-hidden="true">
+                                    <svg class="w-3.5 h-3.5 text-white hidden" width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
                                 </div>
                                 <span class="text-sm font-medium text-gray-400 group-hover:text-gray-300 select-none">Lembrar meu acesso</span>
                             </label>
@@ -403,11 +445,11 @@ $forgot_password_api_url = (in_array($fp_script_dir, ['/', '.', ''], true) ? '' 
                     </div>
 
                     <!-- Verificação "Não sou um robô" -->
-                    <div id="robot-check" class="border-2 rounded-xl p-4 transition-all duration-300 cursor-pointer hover:scale-[1.02]" style="border-color: rgba(255, 255, 255, 0.1); background-color: rgba(15, 20, 25, 0.5);" onclick="toggleRobotCheck()">
+                    <div id="robot-check" role="checkbox" aria-checked="false" tabindex="0" class="border-2 rounded-xl p-4 transition-all duration-300 cursor-pointer hover:scale-[1.02]" style="border-color: rgba(255, 255, 255, 0.1); background-color: rgba(15, 20, 25, 0.5);" onclick="toggleRobotCheck()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleRobotCheck();}">
                         <div class="flex items-center justify-between">
                             <div class="flex items-center gap-3">
-                                <div id="robot-checkbox" class="w-8 h-8 border-2 rounded-lg transition-all duration-300 flex items-center justify-center" style="border-color: rgba(255, 255, 255, 0.2); background-color: #0f1419;">
-                                    <svg id="robot-check-icon" class="w-5 h-5 text-white hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                                <div id="robot-checkbox" aria-hidden="true">
+                                    <svg id="robot-check-icon" class="w-5 h-5 text-white hidden" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
                                 </div>
                                 <span id="robot-text" class="text-sm font-medium text-gray-300">Não sou um robô</span>
                             </div>
@@ -504,8 +546,6 @@ $forgot_password_api_url = (in_array($fp_script_dir, ['/', '.', ''], true) ? '' 
     </div>
 
     <script>
-        lucide.createIcons();
-
         // Verificação de robô
         let isVerified = false;
 
@@ -515,6 +555,7 @@ $forgot_password_api_url = (in_array($fp_script_dir, ['/', '.', ''], true) ? '' 
             const robotText = document.getElementById('robot-text');
             const robotCheck = document.getElementById('robot-check');
             const submitBtn = document.getElementById('submit-btn');
+            if (!checkbox || !checkIcon || !robotText || !robotCheck || !submitBtn) return;
             
             if (!isVerified) {
                 // Ativar verificação
@@ -526,6 +567,7 @@ $forgot_password_api_url = (in_array($fp_script_dir, ['/', '.', ''], true) ? '' 
                 robotText.style.color = 'var(--accent-primary)';
                 robotCheck.style.borderColor = 'var(--accent-primary)';
                 robotCheck.style.backgroundColor = 'rgba(50, 231, 104, 0.05)';
+                robotCheck.setAttribute('aria-checked', 'true');
                 
                 // Habilitar botão de submit
                 submitBtn.disabled = false;
@@ -722,6 +764,10 @@ $forgot_password_api_url = (in_array($fp_script_dir, ['/', '.', ''], true) ? '' 
                 closeForgotPasswordModal();
             }
         });
+
+        try {
+            if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
+        } catch (e) { /* ícones são opcionais */ }
     </script>
 </body>
 </html>
