@@ -301,14 +301,17 @@ $forgot_password_api_url = (in_array($fp_script_dir, ['/', '.', ''], true) ? '' 
             height: 20px;
             min-width: 20px;
             min-height: 20px;
-            border: 2px solid rgba(255, 255, 255, 0.4);
+            border: 2px solid #9ca3af;
             border-radius: 6px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            background-color: #0f1419;
+            background-color: #1a1f24;
             flex-shrink: 0;
             box-sizing: border-box;
+        }
+        .custom-checkbox:hover .check-ui {
+            border-color: var(--accent-primary);
         }
         .custom-checkbox input:checked + .check-ui {
             background-color: var(--accent-primary) !important;
@@ -322,14 +325,17 @@ $forgot_password_api_url = (in_array($fp_script_dir, ['/', '.', ''], true) ? '' 
             height: 32px;
             min-width: 32px;
             min-height: 32px;
-            border: 2px solid rgba(255, 255, 255, 0.4);
+            border: 2px solid #9ca3af;
             border-radius: 8px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            background-color: #0f1419;
+            background-color: #1a1f24;
             flex-shrink: 0;
             box-sizing: border-box;
+        }
+        #robot-check:hover #robot-checkbox {
+            border-color: var(--accent-primary);
         }
     </style>
 </head>
